@@ -1,0 +1,3 @@
+[submodule "src/RenderLib"]
+	path = src/RenderLib
+	url = git://github.com/joesfer/RenderLib.git
