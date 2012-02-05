@@ -33,28 +33,20 @@ Compilation:
 		cd <shatter_folder>
 		git clone git://github.com/joesfer/Shatter.git 
 
-	- The project depends on the RenderLib shared library, included as a submodule.
+	- The project depends on the CoreLib and RenderLib shared libraries, 
+	  included as submodules.
+	  
 		in <shatter_folder>
-		git submodules init
-		git submodules update
+		git submodule init
+		git submodule update
 		
-		git should say Cloning into 'src/RenderLib'...
+		it should create /src/RenderLib and /src/CoreLib
+		otherwise, add them manually:
 		
-	- Build RenderLib using CMake:
-
-		cd <shatter_folder>/src/RenderLib
-		mkdir .build
-		cd .build
-		cmake ..
-
-		Under windows: cmake will generate a Visual studio solution on .build
-		Under linux: cmake will generate a GCC makefile
-
-		Build the library. If everything went well, a new folder structure 
-		<shatter_folder>/src/RenderLib/lib containing the static library 
-		should have been generated.
+		git submodule add git://github.com/joesfer/CoreLib.git source/CoreLib
+		git submodule add git://github.com/joesfer/RenderLib.git source/RenderLib		
 		
-	- Build the Grower plugin using CMake:
+	- Build the Maya plugin using CMake:
 
 		cd <shatter_folder>
 		mkdir .build
@@ -66,7 +58,10 @@ Compilation:
 
 		Build the plugin using visual studio or make.
 
-		This will find the precompiled renderLib and build the .mll plugin
-		under <shatter_folder>/bin
+		Note the solution will contain 3 projects: CoreLib, RenderLib and Shatter,
+		which need to be built in that order. If the process succeeds, the resulting
+		.mll plugin file will be located under <shatter_folder>/bin
 
 	- Load the .mll file in Maya's plugin manager.
+	
+	- Run the provided MEL script for an example on how to use the plugin

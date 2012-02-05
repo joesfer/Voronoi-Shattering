@@ -39,11 +39,14 @@ endif()
 
 find_package(OpenGL)
 
+set( CORELIB_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/CoreLib/include CACHE STRING "path to CoreLib include folder" )
+set( CORELIB_LIBRARY_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/CoreLib/lib CACHE STRING "path to CoreLib libray folder" )
+
+set( RENDERLIB_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/RenderLib/include CACHE STRING "path to RenderLib include folder" )
+set( RENDERLIB_LIBRARY_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/RenderLib/lib CACHE STRING "path to RenderLib libray folder" )
+
 set( MAYA_HEADERS_DIR ${MAYA_ROOT}/include )
 set( MAYA_LIBRARY_DIR ${MAYA_ROOT}/lib )
-
-set( RENDERLIB_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/RenderLib/include CACHE STRING "path to renderlib include folder" )
-set( RENDERLIB_LIBRARY_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/RenderLib/lib/${CMAKE_BUILD_TYPE} CACHE STRING "path to renderlib libray folder" )
 
 set ( LOCAL_WARNING_FLAGS /W3 )
 set ( LOCAL_RTTI_FLAGS /GR )
@@ -53,20 +56,77 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
 # add base to include directories
-include_directories ( ${PUBLIC_INCLUDE_DIRS} ${MAYA_HEADERS_DIR} ${RENDERLIB_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
-link_directories ( ${PUBLIC_LIBRARY_DIRS} ${MAYA_LIBRARY_DIR} ${RENDERLIB_LIBRARY_DIR})
+include_directories ( ${PUBLIC_INCLUDE_DIRS} ${MAYA_HEADERS_DIR} ${CORELIB_INCLUDE_DIR} ${RENDERLIB_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
+link_directories ( ${PUBLIC_LIBRARY_DIRS} ${MAYA_LIBRARY_DIR} ${CORELIB_INCLUDE_DIR} ${RENDERLIB_LIBRARY_DIR})
 
-set( RENDER_LIB RenderLib.lib )
+set( CORE_LIB CoreLib )
+set( RENDER_LIB RenderLib )
 set( OPENGL_LIB opengl32.lib )
 set ( MAYA_DEFINITIONS "_AFXDLL,_MBCS,NT_PLUGIN,REQUIRE_IOSTREAM" )
 set( MAYASDK_LIBRARIES "Foundation.lib" "OpenMaya.lib" "OpenMayaUI.lib" "OpenMayaAnim.lib" "OpenMayaFX.lib" "OpenMayaRender.lib" )
 
 #specify app sources
-file(GLOB_RECURSE SOURCE_FILES src/*.c src/*.cpp src/*.h src/*.inl src/*.hpp src/*.glsl src/*.ui)
 
-add_library( ${MAYA_PLUGIN_NAME} SHARED ${SOURCE_FILES} )
-target_link_libraries( ${MAYA_PLUGIN_NAME} ${MAYASDK_LIBRARIES} ${OPENGL_LIB} ${RENDER_LIB})
+function(create_source_group sourceGroupName relativeSourcePath)
+	foreach(currentSourceFile ${ARGN})
+		file(RELATIVE_PATH folder ${relativeSourcePath} ${currentSourceFile})
+		get_filename_component(filename ${folder} NAME)
+		string(REPLACE ${filename} "" folder ${folder})
+		if(NOT folder STREQUAL "")
+			string(REGEX REPLACE "/+$" "" folderlast ${folder})
+			string(REPLACE "/" "\\" folderlast ${folderlast})
+			message("${sourceGroupName}\\${folderlast}")
+			source_group("${sourceGroupName}\\${folderlast}" FILES ${currentSourceFile})
+		endif(NOT folder STREQUAL "")
+	endforeach(currentSourceFile ${ARGN})
+endfunction(create_source_group)
 
+file(GLOB_RECURSE RENDERLIB_SOURCES 
+	src/RenderLib/source/dataStructs/*.cpp 
+	src/RenderLib/source/geometry/*.cpp 
+	src/RenderLib/source/math/*.cpp 
+	src/RenderLib/include/*.h 
+	src/RenderLib/include/*.inl)
+file(GLOB_RECURSE CORELIB_SOURCES 
+	src/CoreLib/source/*.cpp 
+	src/CoreLib/include/*.h 
+	src/CoreLib/include/*.inl)
+file(GLOB_RECURSE MAYA_PLUGIN_SOURCES
+	src/DelaunayData.*
+	src/DelaunayNode.*
+	src/FillHoles.*
+	src/MeshCut.*
+	src/MPlane.h
+	src/SamplerNode.*
+	src/TriangleSoupMaya.*
+	src/typedef.h
+	src/pluginMain.cpp)
+
+# mimic disk folder structure on the project
+#create_source_group( "coreLib" "${CMAKE_CURRENT_SOURCE_DIR}/src/CoreLib/" ${CORELIB_SOURCES} )
+#create_source_group( "renderLib" "${CMAKE_CURRENT_SOURCE_DIR}/src/RenderLib/" ${RENDERLIB_SOURCES} )
+
+# Core Lib
+add_library(${CORE_LIB} STATIC ${CORELIB_SOURCES})
+set_target_properties( ${CORE_LIB} PROPERTIES PREFIX "" )
+set_target_properties( ${CORE_LIB} PROPERTIES OUTPUT_NAME ${CORE_LIB} )
+set_target_properties( ${CORE_LIB} PROPERTIES LINKER_LANGUAGE CXX )
+set_target_properties( ${CORE_LIB} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CORELIB_LIBRARY_DIR} )
+
+# Render Lib
+
+add_library(${RENDER_LIB} STATIC ${RENDERLIB_SOURCES})
+target_link_libraries( ${RENDER_LIB} ${CORE_LIB})
+
+set_target_properties( ${RENDER_LIB} PROPERTIES PREFIX "" )
+set_target_properties( ${RENDER_LIB} PROPERTIES OUTPUT_NAME ${RENDER_LIB} )
+set_target_properties( ${RENDER_LIB} PROPERTIES LINKER_LANGUAGE CXX )
+set_target_properties( ${RENDER_LIB} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${RENDERLIB_LIBRARY_DIR} )
+
+
+# Shatter Plugin
+add_library( ${MAYA_PLUGIN_NAME} SHARED ${MAYA_PLUGIN_SOURCES} )
+target_link_libraries( ${MAYA_PLUGIN_NAME} ${MAYASDK_LIBRARIES} ${OPENGL_LIB} ${CORE_LIB} ${RENDER_LIB})
 set_target_properties( ${MAYA_PLUGIN_NAME} PROPERTIES COMPILE_DEFINITIONS ${MAYA_DEFINITIONS} )
 set_target_properties( ${MAYA_PLUGIN_NAME} PROPERTIES OUTPUT_NAME ${MAYA_PLUGIN_NAME} )
 set_target_properties( ${MAYA_PLUGIN_NAME} PROPERTIES SUFFIX ".mll" )

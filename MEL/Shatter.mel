@@ -1,0 +1,38 @@
+global proc Shatter( int $fragments )
+{
+	// get the mesh currently selected
+    string $select[] = `ls -sl -type "transform"`;
+	if ( size($select) == 0 ) {
+		error "No mesh selected";
+		return;
+	}
+
+    string $shapes[] = `listRelatives -shapes $select[0]`;
+    if ( size($shapes) == 0 ) {
+		error "No mesh selected";
+		return;
+	}
+	string $shape = $shapes[0];
+	
+	$sampler = `createNode SamplerNode`;
+	// the number of samples determines the number of resulting fragments
+	setAttr ($sampler + ".sampleCount") $fragments;
+	// feed the mesh to the sampler node in order to generate
+	// the seed points
+    connectAttr ($shape + ".outMesh") ($sampler + ".inputMesh");
+
+    // create the shatter node	
+	$shatterNode = `createNode ShatterNode`;
+    connectAttr ($shape + ".outMesh") ($shatterNode + ".inputMesh");
+    connectAttr ($sampler + ".outSamples") ($shatterNode + ".samples");
+	setAttr ($shatterNode + ".shrinking") 0.05; // the larger the value, the wider the cracks  
+	
+	// force shatter node evaluation
+	getAttr ($shatterNode + ".out");
+}
+
+// some test code creating a sphere and breaking it in 10 pieces
+polySphere -ch on -o on -r 5;
+Shatter(10);
+select `ls "polySurface*"`;
+sets -e -forceElement initialShadingGroup;
