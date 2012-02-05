@@ -147,12 +147,12 @@ MStatus ShatterNode::compute( const MPlug& plug, MDataBlock& data )
 														pointVec[ i ].z );
 			}
 		
-			CoreLib::Memory::StaticMemoryPoolBase::Init( 16 * 1024 * 1024 );
+			CoreLib::Memory::StaticMemoryPoolBase::init( 16 * 1024 * 1024 );
 
 			tetrahedralize( pointArray, normalVec, newData->tetrahedra );
 			voronoiCutting( pointArray, newData->tetrahedra, shrinkUnits, mesh );
 
-			CoreLib::Memory::StaticMemoryPoolBase::Destroy();
+			CoreLib::Memory::StaticMemoryPoolBase::destroy();
 		}
 
 		// Assign the new data to the outputSurface handle
@@ -349,7 +349,7 @@ void ShatterNode::voronoiCutting( CoreLib::List< RenderLib::Math::Point3d > &poi
 
 	for( size_t i = 0; i < pointArray.size(); i++ ) {
 
-		CoreLib::Memory::StaticMemoryPoolBase::ClearMemory();
+		CoreLib::Memory::StaticMemoryPoolBase::clearMemory();
 
 #if _DEBUG
 #if DUMP_VD_CELLS
