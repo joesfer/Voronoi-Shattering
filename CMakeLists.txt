@@ -39,11 +39,11 @@ endif()
 
 find_package(OpenGL)
 
-set( CORELIB_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/CoreLib/include CACHE STRING "path to CoreLib include folder" )
-set( CORELIB_LIBRARY_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/CoreLib/lib CACHE STRING "path to CoreLib libray folder" )
+set( CORELIB_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/CoreLib/include CACHE STRING "path to CoreLib include folder" )
+set( CORELIB_LIBRARY_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/CoreLib/lib CACHE STRING "path to CoreLib libray folder" )
 
-set( RENDERLIB_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/RenderLib/include CACHE STRING "path to RenderLib include folder" )
-set( RENDERLIB_LIBRARY_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/RenderLib/lib CACHE STRING "path to RenderLib libray folder" )
+set( RENDERLIB_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/RenderLib/include CACHE STRING "path to RenderLib include folder" )
+set( RENDERLIB_LIBRARY_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/RenderLib/lib CACHE STRING "path to RenderLib libray folder" )
 
 set( MAYA_HEADERS_DIR ${MAYA_ROOT}/include )
 set( MAYA_LIBRARY_DIR ${MAYA_ROOT}/lib )
@@ -75,36 +75,26 @@ function(create_source_group sourceGroupName relativeSourcePath)
 		if(NOT folder STREQUAL "")
 			string(REGEX REPLACE "/+$" "" folderlast ${folder})
 			string(REPLACE "/" "\\" folderlast ${folderlast})
-			message("${sourceGroupName}\\${folderlast}")
 			source_group("${sourceGroupName}\\${folderlast}" FILES ${currentSourceFile})
 		endif(NOT folder STREQUAL "")
 	endforeach(currentSourceFile ${ARGN})
 endfunction(create_source_group)
 
 file(GLOB_RECURSE RENDERLIB_SOURCES 
-	src/RenderLib/source/dataStructs/*.cpp 
-	src/RenderLib/source/geometry/*.cpp 
-	src/RenderLib/source/math/*.cpp 
-	src/RenderLib/include/*.h 
-	src/RenderLib/include/*.inl)
+	RenderLib/source/*.cpp 
+	RenderLib/include/*.h 
+	RenderLib/include/*.inl)
 file(GLOB_RECURSE CORELIB_SOURCES 
-	src/CoreLib/source/*.cpp 
-	src/CoreLib/include/*.h 
-	src/CoreLib/include/*.inl)
+	CoreLib/source/*.cpp 
+	CoreLib/include/*.h 
+	CoreLib/include/*.inl)
 file(GLOB_RECURSE MAYA_PLUGIN_SOURCES
-	src/DelaunayData.*
-	src/DelaunayNode.*
-	src/FillHoles.*
-	src/MeshCut.*
-	src/MPlane.h
-	src/SamplerNode.*
-	src/TriangleSoupMaya.*
-	src/typedef.h
-	src/pluginMain.cpp)
+	src/*.cpp
+	src/*.h)
 
 # mimic disk folder structure on the project
-#create_source_group( "coreLib" "${CMAKE_CURRENT_SOURCE_DIR}/src/CoreLib/" ${CORELIB_SOURCES} )
-#create_source_group( "renderLib" "${CMAKE_CURRENT_SOURCE_DIR}/src/RenderLib/" ${RENDERLIB_SOURCES} )
+#create_source_group( "coreLib" "${CMAKE_CURRENT_SOURCE_DIR}/CoreLib/" ${CORELIB_SOURCES} )
+#create_source_group( "renderLib" "${CMAKE_CURRENT_SOURCE_DIR}/RenderLib/" ${RENDERLIB_SOURCES} )
 
 # Core Lib
 add_library(${CORE_LIB} STATIC ${CORELIB_SOURCES})
