@@ -1,9 +1,9 @@
 Description:
 	
-	Maya plugin implementing the Space Colonization algorithm to grow
-	vein-like structures around objects. 
+	Maya plugin implementing geometry fracturing based on 
+	Voronoi Diagrams (Voronoi Shattering).
 	
-	Visit http://www.joesfer.com/?p=46 for further information.
+	Visit http://www.joesfer.com/?p=60 for further information.
 
 License:
 
