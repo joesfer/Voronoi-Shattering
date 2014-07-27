@@ -32,7 +32,7 @@
 #include "MPlane.h"
 #include <maya/MGlobal.h>
 
-#include <CoreLib.h>
+#include <coreLib.h>
 
 #define DEBUG_STEPS	0
 

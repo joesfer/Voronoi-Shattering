@@ -29,8 +29,8 @@
 #include <maya/MPointArray.h>
 #include <maya/MPointArray.h>
 
-#include <CoreLib.h>
-#include <RenderLib.h>
+#include <coreLib.h>
+#include <renderLib.h>
 
 /////////////////////////////////////////////////////////////////////
 //

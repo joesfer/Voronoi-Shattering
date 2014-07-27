@@ -4,6 +4,15 @@ project(Shatter)
 
 set ( MAYA_PLUGIN_NAME "Shatter" )
 
+# Need to supply MAYA_ROOT
+set( MAYA_ROOT "/usr/autodesk/maya/" CACHE STRING "path to maya installation folder")
+
+set( CORELIB_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/CoreLib/include CACHE STRING "path to CoreLib include folder" )
+set( CORELIB_LIBRARY_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/CoreLib/lib CACHE STRING "path to CoreLib libray folder" )
+
+set( RENDERLIB_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/RenderLib/include CACHE STRING "path to RenderLib include folder" )
+set( RENDERLIB_LIBRARY_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/RenderLib/lib CACHE STRING "path to RenderLib libray folder" )
+
 # Platform specific definitions
 if(WIN32)
     if(MSVC)
@@ -23,27 +32,20 @@ if(WIN32)
     endif(MSVC)
 endif (WIN32)
 
-# Set the Maya version and architecture (default values)
-set(MAYA_VERSION 2011 CACHE STRING "Maya Version")
-set(MAYA_ARCH x64 CACHE STRING "HW Architecture")
 
 if(WIN32)
 	set( MAYA_USER_DIR $ENV{USERPROFILE}/Documents/maya CACHE PATH "Maya user home directory" )
-	set( MAYA_ROOT $ENV{PROGRAMFILES}/Autodesk/Maya${MAYA_VERSION} CACHE PATH "Maya installation directory" )
-	set( MAYA_SDK_DEFINITIONS "_AFXDLL;_MBCS;NT_PLUGIN;REQUIRE_IOSTREAM" )
-
+	set( MAYA_DEFINITIONS "-D_AFXDLL -D_MBCS -DNT_PLUGIN -DREQUIRE_IOSTREAM" )
 else()
 	set( MAYA_USER_DIR $ENV{HOME}/maya CACHE PATH "Maya user home directory" )
-	set( MAYA_ROOT /usr/autodesk/maya${MAYA_VERSION}-${MAYA_ARCH} )
+	add_definitions( -DREQUIRE_IOSTREAM )
+	add_definitions( -D_BOOL )
+	add_definitions( -fPIC )
+	set( MAYA_DEFINITIONS "" )
 endif()
 
 find_package(OpenGL)
 
-set( CORELIB_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/CoreLib/include CACHE STRING "path to CoreLib include folder" )
-set( CORELIB_LIBRARY_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/CoreLib/lib CACHE STRING "path to CoreLib libray folder" )
-
-set( RENDERLIB_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/RenderLib/include CACHE STRING "path to RenderLib include folder" )
-set( RENDERLIB_LIBRARY_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/RenderLib/lib CACHE STRING "path to RenderLib libray folder" )
 
 set( MAYA_HEADERS_DIR ${MAYA_ROOT}/include )
 set( MAYA_LIBRARY_DIR ${MAYA_ROOT}/lib )
@@ -61,9 +63,13 @@ link_directories ( ${PUBLIC_LIBRARY_DIRS} ${MAYA_LIBRARY_DIR} ${CORELIB_INCLUDE_
 
 set( CORE_LIB CoreLib )
 set( RENDER_LIB RenderLib )
-set( OPENGL_LIB opengl32.lib )
-set ( MAYA_DEFINITIONS "_AFXDLL,_MBCS,NT_PLUGIN,REQUIRE_IOSTREAM" )
-set( MAYASDK_LIBRARIES "Foundation.lib" "OpenMaya.lib" "OpenMayaUI.lib" "OpenMayaAnim.lib" "OpenMayaFX.lib" "OpenMayaRender.lib" )
+if (WIN32)
+set( OPENGL_LIB opengl32 )
+else()
+set( OPENGL_LIB  GL )
+endif()
+set( MAYASDK_LIBRARIES "Foundation" "OpenMaya" "OpenMayaUI" "OpenMayaAnim" "OpenMayaFX" "OpenMayaRender" )
+
 
 #specify app sources
 
@@ -117,9 +123,11 @@ set_target_properties( ${RENDER_LIB} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${RENDE
 # Shatter Plugin
 add_library( ${MAYA_PLUGIN_NAME} SHARED ${MAYA_PLUGIN_SOURCES} )
 target_link_libraries( ${MAYA_PLUGIN_NAME} ${MAYASDK_LIBRARIES} ${OPENGL_LIB} ${CORE_LIB} ${RENDER_LIB})
-set_target_properties( ${MAYA_PLUGIN_NAME} PROPERTIES COMPILE_DEFINITIONS ${MAYA_DEFINITIONS} )
+#set_target_properties( ${MAYA_PLUGIN_NAME} PROPERTIES COMPILE_DEFINITIONS ${MAYA_DEFINITIONS} )
 set_target_properties( ${MAYA_PLUGIN_NAME} PROPERTIES OUTPUT_NAME ${MAYA_PLUGIN_NAME} )
-set_target_properties( ${MAYA_PLUGIN_NAME} PROPERTIES SUFFIX ".mll" )
 set_target_properties( ${MAYA_PLUGIN_NAME} PROPERTIES CLEAN_DIRECT_OUTPUT 1 )
+if(WIN32)
+set_target_properties( ${MAYA_PLUGIN_NAME} PROPERTIES SUFFIX ".mll" )
 set_target_properties( ${MAYA_PLUGIN_NAME} PROPERTIES LINK_FLAGS "/export:initializePlugin /export:uninitializePlugin" )
+endif(WIN32)
 

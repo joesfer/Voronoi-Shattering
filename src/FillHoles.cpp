@@ -32,7 +32,7 @@
 #include <maya/MFnMesh.h>
 #include <maya/MFnMeshData.h>
 //
-#include <renderlib.h>
+#include <renderLib.h>
 
 #define DEBUG_STEPS	0
 

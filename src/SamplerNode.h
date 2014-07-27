@@ -29,7 +29,7 @@
 #include <maya/MFnMesh.h>
 #include <maya/MPointArray.h>
 #include <maya/MVectorArray.h>
-#include <renderlib.h>
+#include <renderLib.h>
  
 class TriangleSoupMaya;
 

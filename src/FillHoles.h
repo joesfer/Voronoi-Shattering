@@ -23,8 +23,8 @@
 #ifndef FillHoles_h__
 #define FillHoles_h__
 
-#include <CoreLib.h>
-#include <RenderLib.h>
+#include <coreLib.h>
+#include <renderLib.h>
 #include "typedef.h"
 
 void fillPlanarHoles( const LIST( RenderLib::Math::Vector2f )& vertices, 

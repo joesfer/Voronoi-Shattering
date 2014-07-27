@@ -30,14 +30,12 @@ Compilation:
 
 	- Clone the git repository into a local folder:
 
-		mkdir <shatter_folder>
-		cd <shatter_folder>
-		git clone git://github.com/joesfer/Shatter.git 
+		git clone git://github.com/joesfer/Voronoi-Shattering.git <shatter_folder>
 
 	- The project depends on the CoreLib and RenderLib shared libraries, 
 	  included as submodules.
 	  
-		in <shatter_folder>
+		cd <shatter_folder>
 		git submodule init
 		git submodule update
 		
@@ -53,6 +51,9 @@ Compilation:
 		mkdir .build
 		cd .build
 		cmake ..
+
+		You may need to supply the path to your maya installation folder
+		cmake -DMAYA_ROOT=/path/to/maya ..
 		
 		On Windows: cmake will generate a Visual studio solution on .build
 		On Linux: cmake will generate a GCC makefile

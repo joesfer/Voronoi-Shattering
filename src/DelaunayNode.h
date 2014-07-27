@@ -29,8 +29,8 @@
 #include <maya/MPointArray.h>
 #include <maya/MVectorArray.h>
 
-#include <CoreLib.h>
-#include <RenderLib.h>
+#include <coreLib.h>
+#include <renderLib.h>
 
 class ShatterNode : public MPxNode
 {

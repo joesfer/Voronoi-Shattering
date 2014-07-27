@@ -30,7 +30,7 @@ class MObject;
 
 #include <maya/MTypes.h>
 #include "typedef.h"
-#include <CoreLib.h>
+#include <coreLib.h>
 
 enum MeshCutType {
 	MESHCUT_DISCARD_FRONT,

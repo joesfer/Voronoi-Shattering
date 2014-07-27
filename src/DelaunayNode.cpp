@@ -35,7 +35,7 @@
 #include <maya/MFloatVectorArray.h>
 #include "MPlane.h"
 
-#include <RenderLib.h>
+#include <renderLib.h>
 #include "MeshCut.h"
 #include "typedef.h"
 
@@ -312,7 +312,7 @@ void ShatterNode::tetrahedralize( CoreLib::List< RenderLib::Math::Point3d >& poi
 #endif
 }
 
-#include <random>
+#include <stdlib.h>
 float Random01() {
 	return (float)rand() / RAND_MAX;
 }

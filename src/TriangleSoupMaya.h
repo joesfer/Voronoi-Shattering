@@ -24,7 +24,7 @@
 #ifndef TriangleSoupMaya_h__
 #define TriangleSoupMaya_h__
 
-#include <RenderLib.h>
+#include <renderLib.h>
 #include <maya/MFnMesh.h>
 #include <vector>
 
