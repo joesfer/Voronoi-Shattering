@@ -35,6 +35,7 @@ typedef struct {
 class TriangleSoupMaya : public RenderLib::DataStructures::ITriangleSoup<VertexPosition> {
 public:
 	TriangleSoupMaya ( const MFnMesh& mesh, MSpace::Space space = MSpace::kObject );
+	virtual ~TriangleSoupMaya() {}
 
 	virtual size_t		numIndices() const { return indices.size(); }
 	virtual const int*	getIndices() const { return &indices[ 0 ]; }

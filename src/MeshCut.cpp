@@ -34,6 +34,8 @@
 
 #include <coreLib.h>
 
+#include <sstream>
+
 #define DEBUG_STEPS	0
 
 
@@ -127,12 +129,13 @@ void splitEdge( edge_t& edge, const int iEdge, MIntArray &triangles, LIST( bool 
 			return;
 		}
 	
-		const int ii = edgeTriVertOffset;
 		const int ij = ( edgeTriVertOffset + 1 ) % 3;
 		const int ik = ( edgeTriVertOffset + 2 ) % 3;
+#ifdef _DEBUG
+		const int ii = edgeTriVertOffset;
 		assert( triangles[ 3 * tf + ii ] == vi );
 		assert( triangles[ 3 * tf + ij ] == vj );
-
+#endif
 		const int vkf = triangles[ 3 * tf + ik ];
 
 		triangles[ 3 * tf + ij ] = iCut;
@@ -200,15 +203,17 @@ void splitEdge( edge_t& edge, const int iEdge, MIntArray &triangles, LIST( bool 
 		}
 
 		if ( edgeTriVertOffset == 3 ) {
-			assert( false );
+            assert( false );
 			return;
 		}
 
 		const int ii = ( edgeTriVertOffset + 1 ) % 3;
-		const int ij = edgeTriVertOffset;
 		const int ik = ( edgeTriVertOffset + 2 ) % 3;
+#ifdef _DEBUG
+		const int ij = edgeTriVertOffset;
 		assert( triangles[ 3 * tb + ii ] == vi );
 		assert( triangles[ 3 * tb + ij ] == vj );
+#endif
 
 		const int vkb = triangles[ 3 * tb + ik ];
 
@@ -255,8 +260,8 @@ void splitEdge( edge_t& edge, const int iEdge, MIntArray &triangles, LIST( bool 
 
 void splitEdges( const int vi, const int vj, MPointArray& vertices, MIntArray& triangles, LIST( bool )& triangleIsInterior, double distVi, double distVj, adjacencyInfo_t& adjacency ) {
 	
-	const double edgeLength = abs( distVi ) + abs( distVj );
-	const double bias = abs( distVi ) / edgeLength;
+	const double edgeLength = fabs( distVi ) + fabs( distVj );
+	const double bias = fabs( distVi ) / edgeLength;
 	
 	MPoint cut = vertices[ ((unsigned int)vi) ] + ( vertices[ (unsigned int)vj ] - vertices[ (unsigned int)vi ] ) * bias;
 	int iCut = vertices.length();
@@ -279,8 +284,6 @@ void splitEdges( const int vi, const int vj, MPointArray& vertices, MIntArray& t
 }
 
 bool splitTriangle( MIntArray& triangles, const int t, MPointArray& vertices, LIST( bool )& triangleIsInterior, const MPlane& Plane, adjacencyInfo_t& adjacency ) {
-	bool front = false, back = false;
-	int isectOffset = 0;
 	double dist[3];
 	int iv[ 3 ];
 	for( int i = 0; i < 3; i++ ) {
@@ -444,11 +447,12 @@ void MergeCollinearEdges( LIST( RenderLib::Math::Vector2f )& verts, LIST( int )&
 				}
 
 				const int commonPoint = ( from == fromJ || from == toJ ) ? from : to;
-				const int src1 = from != commonPoint ? from : to;
 				const int src2 = fromJ != commonPoint ? fromJ : toJ;
-
+#ifdef _DEBUG 
+				const int src1 = from != commonPoint ? from : to;
 				assert( src1 != src2 );
 				assert( src1 != commonPoint );
+#endif
 
 				// src1 ------ commonPoint | commonPoint -------- src2 ------ next
 
@@ -821,13 +825,18 @@ bool meshCut( MPointArray& vertices, MIntArray& triangleVertices, LIST( bool )& 
 		for( size_t j = 0; j < adjacency.vertEdges[ v0 ].size(); j++ ) {
 			const edge_t& edge = adjacency.edges[ adjacency.vertEdges[ v0 ][ j ] ];
 			const int v1 = edge.v[ 0 ] == v0 ? edge.v[ 1 ] : edge.v[ 0 ];
-			if ( edgeVertices.FindIndex( v1 ) == -1 ) {
+			if ( edgeVertices.findIndex( v1 ) == -1 ) {
 				continue;
 			}
 			MPoint& a = vertices[ v0 ];
 			MPoint& b = vertices[ v1 ];
-			MString cmd = CoreLib::varArgsStr<1024>( "$c = `curve -d 1 -p %f %f %f -p %f %f %f -k 0 -k 1`; rename $c cutEdge%d_%d_%d;", a.x, a.y, a.z, b.x, b.y, b.z, cutEdge, v0, v1 );
-			MGlobal::executeCommand( cmd );
+			{
+				std::ostringstream oss;
+				oss << "$c = `curve -d 1 -p " << a.x << " " << a.y << " " << a.z <<
+					" -p " << b.x << " " << b.y << " " << b.z << " -k 0 -k 1`;" <<
+					"rename $c cutEdge"<< cutEdge <<"_"<< v0 <<"_"<< v1 << ";";
+				MGlobal::executeCommand( oss.str().c_str() );
+			}
 
 		}
 	}
@@ -930,8 +939,13 @@ bool meshCut( MPointArray& vertices, MIntArray& triangleVertices, LIST( bool )& 
 		for( size_t i = 0; i < edges.size(); i += 2 ) {
 			Vector2f a = vertices2D[ edges[ i ] ];
 			Vector2f b = vertices2D[ edges[ i + 1 ] ];
-			MString cmd = CoreLib::varArgsStr<1024>( "$c = `curve -d 1 -p %f %f 0 -p %f %f 0 -k 0 -k 1`; rename $c inputEdge%d_%d_%d;", a.x, a.y, b.x, b.y, holeId, edges[ i ], edges[ i + 1 ] );
-			MGlobal::executeCommand( cmd );
+			{
+				std::ostringstream oss;
+				oss << "$c = `curve -d 1 -p " << a.x << " " << a.y << 
+					" -p " << b.x << " " << b.y << " -k 0 -k 1`;" <<
+					"rename $c inputEdge"<< holeId <<"_"<< edges[i] <<"_"<< edges[i+1] << ";";
+				MGlobal::executeCommand( oss.str().c_str() );
+			}
 		}
 #endif
 		MergeCollinearEdges( vertices2D, edges );
@@ -939,8 +953,13 @@ bool meshCut( MPointArray& vertices, MIntArray& triangleVertices, LIST( bool )& 
 		for( size_t i = 0; i < edges.size(); i += 2 ) {
 			Vector2f a = vertices2D[ edges[ i ] ];
 			Vector2f b = vertices2D[ edges[ i + 1 ] ];
-			MString cmd = CoreLib::varArgsStr<1024>( "$c = `curve -d 1 -p %f %f 0 -p %f %f 0 -k 0 -k 1`; rename $c mergedEdge%d_%d_%d;", a.x, a.y, b.x, b.y, holeId, edges[ i ], edges[ i + 1 ] );
-			MGlobal::executeCommand( cmd );
+			{
+				std::ostringstream oss;
+				oss << "$c = `curve -d 1 -p " << a.x << " " << a.y << 
+					" -p " << b.x << " " << b.y << " -k 0 -k 1`;" <<
+					"rename $c mergedEdge"<< holeId <<"_"<< edges[i] <<"_"<< edges[i+1] << ";";
+				MGlobal::executeCommand( oss.str().c_str() );
+			}
 		}
 #endif
 
@@ -984,7 +1003,7 @@ bool meshCut( MPointArray& vertices, MIntArray& triangleVertices, LIST( bool )& 
 		for( size_t i = 0; i < vertices2D.size(); i++ ) {
 			bool include = true;
 			for( size_t j = 0; j < vertexRemap.size(); j++ ) {
-				if ( vertexRemap[ j ].first == i ) {
+				if ( vertexRemap[ j ].first == (int)i ) {
 					include = false;
 					break;
 				}

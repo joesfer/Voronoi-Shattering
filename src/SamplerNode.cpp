@@ -66,6 +66,7 @@ MObject		Sampler::worldToLocal;
 Sampler::Sampler( MSpace::Space space ) : sampleSpace( space ) {
 	accelerator = NULL;
 	geometry = NULL;
+	RenderLib::Math::Matsumoto::init_genrand(1234);	
 }
 Sampler::~Sampler() {
 	delete( accelerator );
@@ -141,7 +142,7 @@ MStatus Sampler::compute( const MPlug& plug, MDataBlock& data )
 
 		MDataHandle inputMeshHandle = data.inputValue( inputMesh, &returnStatus );
 		if ( returnStatus != MS::kSuccess ) return MStatus::kInvalidParameter;
-		int numSamples = data.inputValue( nSamples, &returnStatus ).asInt();
+		//int numSamples = data.inputValue( nSamples, &returnStatus ).asInt();
 		if ( returnStatus != MS::kSuccess ) return MStatus::kInvalidParameter;
 
 		MFnMesh mesh( inputMeshHandle.asMesh() );

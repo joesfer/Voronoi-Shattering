@@ -147,10 +147,10 @@ MStatus ShatterNode::compute( const MPlug& plug, MDataBlock& data )
 														pointVec[ i ].z );
 			}
 		
-			CoreLib::Memory::StaticMemoryPoolBase::init( 16 * 1024 * 1024 );
+            CoreLib::Memory::StaticMemoryPoolBase::init( 16 * 1024 * 1024 );
 
 			tetrahedralize( pointArray, normalVec, newData->tetrahedra );
-			voronoiCutting( pointArray, newData->tetrahedra, shrinkUnits, mesh );
+            voronoiCutting( pointArray, newData->tetrahedra, shrinkUnits, mesh );
 
 			CoreLib::Memory::StaticMemoryPoolBase::destroy();
 		}
@@ -317,7 +317,9 @@ float Random01() {
 	return (float)rand() / RAND_MAX;
 }
 
-void ShatterNode::voronoiCutting( CoreLib::List< RenderLib::Math::Point3d > &pointArray, CoreLib::List< RenderLib::Geometry::Delaunay::tetrahedron_t > &tetrahedra, const float shrinkUnits, MFnMesh& mesh ) {
+void ShatterNode::voronoiCutting( CoreLib::List< RenderLib::Math::Point3d > &pointArray, 
+								  CoreLib::List< RenderLib::Geometry::Delaunay::tetrahedron_t > &tetrahedra, 
+								  const float shrinkUnits, MFnMesh& mesh ) {
 	using namespace RenderLib::Math;
 
 	// Extract Voronoi Diagram from Delaunay Triangulation
@@ -381,13 +383,13 @@ void ShatterNode::voronoiCutting( CoreLib::List< RenderLib::Math::Point3d > &poi
 			for( int f = 0; f < 4; f++ ) {
 				adjacentT.getFaceVertices( f, a, b, c );
 				// if face contains our point, extract the two adjacent edges
-				if ( a == i ) {
+				if ( a == (int)i ) {
 					edgesToP.addUnique( b );
 					edgesToP.addUnique( c );
-				} else if ( b == i ) {
+				} else if ( b == (int)i ) {
 					edgesToP.addUnique( a );
 					edgesToP.addUnique( c );
-				} else if ( c == i ) {
+				} else if ( c == (int)i ) {
 					edgesToP.addUnique( a );
 					edgesToP.addUnique( b );
 				}
@@ -413,7 +415,9 @@ void ShatterNode::voronoiCutting( CoreLib::List< RenderLib::Math::Point3d > &poi
 #endif
 			int candidates = 0;
 			double smallerSphereRadius = DBL_MAX;
+#if DUMP_VD_CELLS && 0		
 			int betterCandidate;
+#endif
 			RenderLib::Math::Point3d facePoint;	
 
 			// Optimization: we don't need to calculate the whole VD face
@@ -446,7 +450,9 @@ void ShatterNode::voronoiCutting( CoreLib::List< RenderLib::Math::Point3d > &poi
 					if ( radius < smallerSphereRadius) {
 						smallerSphereRadius = radius;
 						facePoint = center;
+#if DUMP_VD_CELLS && 0		
 						betterCandidate = adjacentTetrahedra[ t ];
+#endif
 					}
 				}
 			}
@@ -492,8 +498,8 @@ void ShatterNode::voronoiCutting( CoreLib::List< RenderLib::Math::Point3d > &poi
 #endif
 #if _DEBUG
 #if DUMP_VD_CELLS
-			planeNormals.Append( planeNormal );
-			planeDists.Append( planeDist );
+			planeNormals.append( planeNormal );
+			planeDists.append( planeDist );
 #endif 
 #endif
 			MPlane plane;
@@ -519,20 +525,21 @@ void ShatterNode::voronoiCutting( CoreLib::List< RenderLib::Math::Point3d > &poi
 		}
 #if _DEBUG
 #if DUMP_VD_CELLS && 1
-		for( int i = 0; i < planeNormals.Num(); i++ ) {
+		for( size_t i = 0; i < planeNormals.size(); i++ ) {
 			const Vector3d& planeNormal = planeNormals[ i ];
 			double planeDist = planeDists[ i ];
 			static int vdc = 0;
 			vdc++;
-			MString cmd = CoreLib::va("$p = `polyPlane -ax %f %f %f -w 1000 -h 1000 -sx 1 -sy 1`;\
-									  move -absolute %f %f %f $p;\
-									  select $p;\
-									  rename VDP_%d;",
-									  planeNormal.x, planeNormal.y, planeNormal.z,
-									  planeNormal.x * planeDist, planeNormal.y * planeDist, planeNormal.z * planeDist,
-									  vdc );
-			MGlobal::executeCommand( cmd );				
-			for( int j = 0; j < planeNormals.Num(); j++ ) {
+			{
+				std::ostringstream oss;
+				oss << "$p = `polyPlane -ax " << planeNormal.x << " " << planeNormal.y << " " << planeNormal.z <<
+					" -w 1000 -h 1000 -sx 1 -sy 1`;" <<
+				oss << "move -absolute " << planeNormal.x * planeDist << " " << planeNormal.y * planeDist << " " << planeNormal.z * planeDist << " $p;" <<
+				oss << "select $p;" <<
+				oss << "rename VDP_" << vdc << ";";
+				MGlobal::executeCommand( oss.str().c_str() );				
+			}
+			for( size_t j = 0; j < planeNormals.size(); j++ ) {
 				if ( j == i ) {
 					continue;
 				}
@@ -542,10 +549,12 @@ void ShatterNode::voronoiCutting( CoreLib::List< RenderLib::Math::Point3d > &poi
 				double cutPlaneDist = -planeDists[ j ];
 				const Vector3d cutPlaneCenter = cutPlaneNormal * cutPlaneDist;
 
-				MString cmd = CoreLib::va( "polyCut -df 1 -pc %f %f %f -rx %f -ry %f;",
-											cutPlaneCenter.x, cutPlaneCenter.y, cutPlaneCenter.z,
-											Xrot, Yrot );
-				MGlobal::executeCommand( cmd );				
+				{
+					std::ostringstream oss;
+					oss << "polyCut -df 1 -pc " << cutPlaneCenter.x << " " << cutPlaneCenter.y << " " << cutPlaneCenter.z <<
+						" -rx " << Xrot << " -ry " << Yrot << ";";
+					MGlobal::executeCommand( oss.str().c_str() );				
+				}
 			}
 		}
 #endif
